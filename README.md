@@ -1,1 +1,3 @@
-# SkyDB-Manager
+# SkyID-example-note-dapp
+
+https://skyacc.hns.siasky.net/
