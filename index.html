@@ -122,7 +122,7 @@
 						<td><input type="text" value="` + entries[i].domain + `" readonly class="disabled" id="domain` + nextRow + `"></td>
 						<td><input type="text" value="` + entries[i].skylink + `" class="biginput" id="skylink` + nextRow + `"></td>
 						<td><a href="` + url + `" target="_blank">Open</a></td>
-						<td><a style="margin-left: 20px;" href="#" onclick="javascript: copy('skyns://` + encodeURI(publickeyString) + `/` + datakeyHash + `');">Copy HNS record</a></td>
+						<td><a style="margin-left: 20px;" href="#" onclick="javascript: copy('skyns://` + encodeURIComponent(publickeyString) + `/` + datakeyHash + `');">Copy HNS record</a></td>
 					</tr>`
 					nextRow += 1
 				}
