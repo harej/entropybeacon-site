@@ -50,7 +50,7 @@
 
 <!-- Initialize and setup SkyID -->
 
-<script src="https://skyaccounts.hns.siasky.net/skyid.js"></script>
+<script src="https://sky-id.hns.siasky.net/skyid.js"></script>
  
 
 <!-- for testing -->
@@ -112,7 +112,11 @@
 		
 			if (entries.length > 0) {
 				for (let i = 0; i < entries.length; i++) {
-					let {publickeyString, datakeyHash} = skyid.getRegistryUrl(entries[i].domain)
+					let registryUrl = skyid.getRegistryUrl(entries[i].domain)
+					let registryUrlLoc = new URL(registryUrl)
+					let urlParams = new URLSearchParams(registryUrlLoc.search)
+					let publickeyString = urlParams.get('publickey')
+					let datakeyHash = urlParams.get('datakey')
 					if (window.location.protocol == "file:") {
 						var url = 'https://siasky.net/skynet/registry?publickey=' + publickeyString + '&datakey=' + datakeyHash
 					} else {
@@ -192,7 +196,7 @@
 		skyid.setFile('m', json, function(response) {
 			document.getElementById('save_note').innerHTML = 'Index saved'
 			if (response != true) {
-				alert('Sorry, but upload failed :(')
+				alert('Sorry, upload failed :(')
 			} else {
 				console.log('Account data saved')
 				setReg(0, entries)
