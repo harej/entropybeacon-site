@@ -2,7 +2,7 @@
 <link rel="stylesheet" href="style.css">
 <meta charset="utf-8">
 
-<title>Note & SkyID</title>
+<title>SkyDB manager</title>
 
 <div class="show-if-initialized show-if-logged-in logout-bar" style="display:none">
 	<a href="javascript: skyid.sessionDestroy()">Logout</a>
@@ -13,7 +13,8 @@
 </div>
 
 <div class="show-if-initialized hide-if-logged-in" style="display:none">
-	<h2>Make a note while using <a href="https:/skyaccounts.hns.siasky.net">SkyID</a> for authentication</h2>
+	<h2 class="green">SkyDB manager</h2>
+	<p>Create and update SkyDB registry entries & update your HNS pointers</p>
 
 	<!-- Button for login -->
 	<button onclick="skyid.sessionStart()" class="skyid-button button-blow big-margin">
@@ -22,14 +23,19 @@
 	</button>
 </div>
 
-<div class="show-if-initialized show-if-logged-in small-margin" style="display:none">
-	<textarea id="note" class="p-3 rounded"> Loading... </textarea><br>
-	<button id="save_note" class="skyid-button small-margin-top" onclick="saveNote()">Save unencrypted note</button>
+<div class="show-if-initialized show-if-logged-in small-margin container" style="display:none">
+	<div id="content" >
+		Loading... 
+	</div><br>
+	<div class="text-right">
+		<button class="small-skyid-button float-right" onclick="addEmptyRow()">+ Add registry entry</button>
+	</div> <br><br>
+	<div class="text-center">
+		<button id="save_note" class="skyid-button small-margin-top" onclick="saveNote()">Save enties</button>
+	</div>
 </div>
 
 
-<footer>Read more on <a href="https://github.com/DaWe35/SkyID-example-note-dapp" target="_blank">GitHub</a> -
-	forked from <a href="https://skyportal.xyz/_BF4CHsFIichxjdgAFhU-tEKqsoPDxC9OMsWbMkyMbz4KQ/" target="_blank">Note to myself</a>
 </footer>
 
 
@@ -43,7 +49,7 @@
 
 <script>
 	// var skyid = new SkyID('Example skapp')
-	var skyid = new SkyID('Example skapp', skyidEventCallback)
+	var skyid = new SkyID('SkyDB Manager', skyidEventCallback)
 
 	// Optional: listen for callbacks
 	function skyidEventCallback(message) {
@@ -68,30 +74,124 @@
 		fetchNote()
 	}
 
+
+	var nextRow = 0
 	// fetch the note
 	function fetchNote() {
 		// fetch file
-		skyid.getFile('note', function(response, revision) {
-			var note = document.getElementById('note')
+		skyid.getFile('m', function(response, revision) {
+			console.log("response from getFile", revision, response);
+			var content = document.getElementById('content')
 			if (response == '') { // file not found
-				note.value = ''
+				var entries = []
 			} else { // success
-				var respObs = JSON.parse(response)
-				note.value = respObs.data
+				resp = JSON.parse(response)
+				var entries = resp.entries
 			}
+
+			let html = `
+				<table>
+					<tbody id="contentTable">
+						<tr>
+							<th>Domain/id</th>
+							<th>Skylink</th>
+							<th></th>
+						</tr>`
+		
+			if (entries.length == 0) {
+				addEmptyRow()
+			} else {
+				for (let i = 0; i < entries.length; i++) {
+					let {publickeyString, datakeyHash} = skyid.getRegistryUrl(entries[i].domain)
+					if (window.location.protocol == "file:") {
+						var url = 'https://siasky.net/skynet/registry?publickey=' + publickeyString + '&datakey=' + datakeyHash
+					} else {
+						var url = '/skynet/registry?publickey=' + publickeyString + '&datakey=' + datakeyHash
+					}
+					html += `<tr>
+						<td><input type="text" value="` + entries[i].domain + `" readonly class="disabled" id="domain` + nextRow + `"></td>
+						<td><input type="text" value="` + entries[i].skylink + `" class="biginput" id="skylink` + nextRow + `"></td>
+						<td><a href="` + url + `" target="_blank">Open</a></td>
+					</tr>`
+					nextRow += 1
+				}
+			}
+
+			html += `
+					</tbody>
+				</table>`
+			content.innerHTML = html
 		})
+	}
+
+	function addEmptyRow() {
+		var contentTable = document.getElementById('contentTable')
+		let html = `<tr>
+			<td><input type="text" required id="domain` + nextRow + `"></td>
+			<td><input type="text" required class="biginput" id="skylink` + nextRow + `"></td>
+			<td></td>
+		</tr>`
+		nextRow += 1
+		contentTable.innerHTML += html
 	}
 
 	function saveNote() {
-		// convert note to json
-		var note = document.getElementById('note').value
-		var json = JSON.stringify({ data: note })
+		document.getElementById('save_note').innerHTML = 'Saving data...'
+
+		var entries = []
+		var i = 0
+		while (true) {
+			if (document.getElementById('domain' + i) != null) {
+				let domain = document.getElementById('domain' + i).value
+				let skylink = document.getElementById('skylink' + i).value
+				if (domain.length < 1) {
+					alert('Empty inputs can not be saved')
+					return
+				}
+				if (skylink.length != 46) {
+					alert('Skylink is invalid, please enter a 46 character length skylink without "sia://""')
+					return
+				}
+				entries.push( {'domain': domain, 'skylink': skylink} )
+				i += 1
+			} else {
+				break
+			}
+		}
+		var json = JSON.stringify({ 'entries': entries })
 
 		// upload to registry with SkyID key
-		skyid.setFile('note', json, function(response) {
+		skyid.setFile('m', json, function(response) {
+			document.getElementById('save_note').innerHTML = 'Index saved'
 			if (response != true) {
 				alert('Sorry, but upload failed :(')
+			} else {
+				console.log('Account data saved')
+				setReg(0, entries)
 			}
 		})
 	}
+
+
+	function setReg(i, entries) {
+		console.log(entries)
+		skyid.setRegistry(entries[i].domain, entries[i].skylink, function (success) {
+			console.log(i)
+			if (success) {
+				i += 1
+				if (i < entries.length) {
+					document.getElementById('save_note').innerHTML = i + '/' + entries.length + ' saved'
+					setReg(i, entries)
+				} else {
+					document.getElementById('save_note').innerHTML = 'Save enties'
+				}
+			} else {
+				console.log('failed to save domain: ', entries[i].domain)
+				alert('failed to save domain: ', entries[i].domain, '- is it a valid skylink?')
+			}
+		})
+
+	}
+
+	
 </script>
