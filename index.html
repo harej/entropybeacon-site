@@ -98,9 +98,8 @@
 							<th></th>
 						</tr>`
 		
-			if (entries.length == 0) {
-				addEmptyRow()
-			} else {
+		
+			if (entries.length > 0) {
 				for (let i = 0; i < entries.length; i++) {
 					let {publickeyString, datakeyHash} = skyid.getRegistryUrl(entries[i].domain)
 					if (window.location.protocol == "file:") {
@@ -121,6 +120,10 @@
 					</tbody>
 				</table>`
 			content.innerHTML = html
+
+			if (entries.length == 0) {
+				addEmptyRow()
+			}
 		})
 	}
 
@@ -132,7 +135,9 @@
 			<td></td>
 		</tr>`
 		nextRow += 1
-		contentTable.innerHTML += html
+
+		contentTable.insertAdjacentHTML('beforeend', html);
+		
 	}
 
 	function saveNote() {
@@ -184,6 +189,7 @@
 					setReg(i, entries)
 				} else {
 					document.getElementById('save_note').innerHTML = 'Save enties'
+					fetchNote()
 				}
 			} else {
 				console.log('failed to save domain: ', entries[i].domain)
