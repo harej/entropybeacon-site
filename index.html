@@ -78,6 +78,7 @@
 	var nextRow = 0
 	// fetch the note
 	function fetchNote() {
+		nextRow = 0
 		// fetch file
 		skyid.getFile('m', function(response, revision) {
 			console.log("response from getFile", revision, response);
@@ -96,6 +97,7 @@
 							<th>Domain/id</th>
 							<th>Skylink</th>
 							<th></th>
+							<th></th>
 						</tr>`
 		
 		
@@ -111,6 +113,7 @@
 						<td><input type="text" value="` + entries[i].domain + `" readonly class="disabled" id="domain` + nextRow + `"></td>
 						<td><input type="text" value="` + entries[i].skylink + `" class="biginput" id="skylink` + nextRow + `"></td>
 						<td><a href="` + url + `" target="_blank">Open</a></td>
+						<td><a style="margin-left: 20px;" href="#" onclick="javascript: copy('skyns://` + encodeURI(publickeyString) + `/` + datakeyHash + `');">Copy HNS record</a></td>
 					</tr>`
 					nextRow += 1
 				}
@@ -127,11 +130,22 @@
 		})
 	}
 
+	function copy(text) {
+		let input = document.createElement('input');
+		input.setAttribute('value', text);
+		document.body.appendChild(input);
+		input.select();
+		let result = document.execCommand('copy');
+		document.body.removeChild(input);
+		return result;
+	}
+
 	function addEmptyRow() {
 		var contentTable = document.getElementById('contentTable')
 		let html = `<tr>
 			<td><input type="text" required id="domain` + nextRow + `"></td>
 			<td><input type="text" required class="biginput" id="skylink` + nextRow + `"></td>
+			<td></td>
 			<td></td>
 		</tr>`
 		nextRow += 1
