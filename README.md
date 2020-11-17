@@ -1,4 +1,4 @@
-# SkyID-example-note-dapp
+# SkyDB Manager
 
 https://dbaz.hns.siasky.net/
 
