@@ -40,7 +40,7 @@
 		<button class="small-skyid-button float-right" onclick="addEmptyRow()">+ Add registry entry</button>
 	</div> <br><br>
 	<div class="text-center">
-		<button id="save_note" class="skyid-button small-margin-top" onclick="saveNote()">Save enties</button>
+		<button id="save_note" class="skyid-button small-margin-top" onclick="saveNote()">Save entries</button>
 	</div>
 </div>
 
@@ -215,7 +215,7 @@
 					document.getElementById('save_note').innerHTML = i + '/' + entries.length + ' saved'
 					setReg(i, entries)
 				} else {
-					document.getElementById('save_note').innerHTML = 'Save enties'
+					document.getElementById('save_note').innerHTML = 'Save entries'
 					fetchNote()
 				}
 			} else {
