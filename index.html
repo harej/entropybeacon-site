@@ -2,229 +2,73 @@
 <link rel="stylesheet" href="style.css">
 <meta charset="utf-8">
 
-<title>SkyDB manager</title>
+<title>Skynet Entropy Beacon</title>
 
-<div class="show-if-initialized show-if-logged-in logout-bar" style="display:none">
-	<a href="javascript: skyid.sessionDestroy()">Logout</a>
+<div style="margin:0 auto; max-width:1000px; padding-bottom:2em;">
+	<h2 class="green">Skynet Entropy Beacon</h2>
+	<p>The Skynet Entropy Beacon provides securely generated randomness, produced by the beacon of your choice, delivered through the decentralized content network Skynet.</p>
+	<p>Lightweight beacons that anyone can run post random data on Skynet approximately once every 30 seconds, and this randomness can be used if you do not trust your user or device to provide genuinely random data. Each random data beacon is identified by its public key, and this public key can be used to verify the signature associated with the random data, so you can be sure that the data comes from the source it claims to come from.</p>
+	<p>The beacons also upload a timestamp at approximately the same time they upload the random data. These timestamps should be treated as approximations, and the Entropy Beacon should not be considered a timestamping service.</p>
 </div>
 
-<div class="hide-if-initialized">
-	<h2 class="big-margin">Loading...</h2>
-</div>
-
-<div class="show-if-initialized hide-if-logged-in" style="display:none">
-	<h2 class="green">SkyDB manager</h2>
-	<p>Create and update SkyDB registry entries & update your HNS pointers</p>
-
-	<!-- Button for login -->
-	<button onclick="skyid.sessionStart()" class="skyid-button button-blow big-margin">
-		<img src="SkyID_Logo_128_white.png" alt="SkyID" class="skyid-logo">
-		Sign in with SkyID
-	</button>
-
-	<div class="text-center"  style="width: 400px; margin: auto;">
-		<p>Watch a tutorial about SkyDB Manager:</p>
-		<a href="https://skylive.coolhd.hu/player?s=212" target="_blank">
-			<img src="video_thumbnail_small.jpg" alt="SkyDB manager video" style="filter: brightness(0.8); width: 100%;"><br>
-			<h5 style="color: #FFF;">[How to] setup a Skynet HNS domain with SkyDB Manager</h5>
-
-		</a>
-	</div>
-</div>
-
-<div class="show-if-initialized show-if-logged-in small-margin container" style="display:none">
-	<div id="content" >
-		Loading... 
-	</div><br>
-	<div class="text-right">
-		<button class="small-skyid-button float-right" onclick="addEmptyRow()">+ Add registry entry</button>
-	</div> <br><br>
-	<div class="text-center">
-		<button id="save_note" class="skyid-button small-margin-top" onclick="saveNote()">Save entries</button>
-	</div>
-</div>
-
-
-</footer>
-
-
-<!-- Initialize and setup SkyID -->
+<table id="contentTable" style="padding-top:5rem; margin:1rem; width:98%">
+	<tbody>
+		<tr>
+			<th>Label</th>
+			<th>Public Key</th>
+			<th>Random Data</th>
+			<th>Timestamp</th>
+		</tr>
+	</tbody>
+</table>
 
 <script src="https://sky-id.hns.siasky.net/skyid.js"></script>
- 
-
-<!-- for testing -->
-<!-- <script src="http://idtest.local/skyid.js"></script> -->
-
 <script>
-	// var skyid = new SkyID('Example skapp')
-	var skyid = new SkyID('SkyDB Manager', skyidEventCallback)
+	var skyid = new SkyID('app', null);
+	var sky = skyid.skynetClient;
+	var pubkeys = [
+		'd2ce0810c868c63c665eab97706a0dd06be27b092c527c06830a1602262cbfe5'
+	];
 
-	// Optional: listen for callbacks
-	function skyidEventCallback(message) {
-		switch (message) {
-			case 'login_fail':
-				console.log('Login failed')
-				break;
-			case 'login_success':
-				console.log('Login succeed!')
-				fetchNote()
-				break;
-			case 'destroy':
-				console.log('Logout succeed!')
-				break;
-			default:
-				console.log(message)
-				break;
-		}
+	for (var i = 0; i < pubkeys.length; i++) {
+		var pubkey = pubkeys[i];
+		var table = document.getElementById('contentTable');
+		var row = table.insertRow(i+1);
+		var labelCell = row.insertCell(0);
+		var pubkeyCell = row.insertCell(1);
+		var randomnessCell = row.insertCell(2);
+		var timestampCell = row.insertCell(3);
+
+		pubkeyCell.innerHTML = `<input style="width:90%;" type="text" readonly value="` + pubkey + `" id="pubkey` + i + `">`
+		labelCell.innerHTML = `<input style="width:90%;" type="text" readonly value="Loading..." id=label` + i + `">`;
+		randomnessCell.innerHTML = `<input style="width:90%;" type="text" readonly value="Loading..." id=randomness` + i + `">`;
+		timestampCell.innerHTML = `<input style="width:90%;" type="text" readonly value="Loading..." id=timestamp` + i + `">`;
+
+		sky.registry.getEntry(pubkey, 'entropybeacon:data')
+			.then((result) => {
+				var randomness = result.entry.data;
+				sky.registry.getEntry(pubkey, 'entropybeacon:time')
+					.then((result2) => {
+						var timestamp = result2.entry.data;
+						sky.registry.getEntry(pubkey, 'entropybeacon:label')
+							.then((result3) => {
+								var label = result3.entry.data;
+								labelCell.innerHTML = `<input style="width:90%;" type="text" readonly value="` + label + `" id=label` + i + `">`;
+								randomnessCell.innerHTML = `<input style="width:90%;" type="text" readonly value="` + randomness + `" id=randomness` + i + `">`;
+								timestampCell.innerHTML = `<input style="width:90%;" type="text" readonly value="` + timestamp + `" id=timestamp` + i + `">`;
+							}).catch((error3) => {
+								console.log('Could not retrieve label.')
+								console.error(error3);
+							})
+					}).catch((error2) => {
+						console.log('Could not retrieve time.')
+						console.error(error2);
+					})
+			})
+			.catch((error) => {
+				console.log('Could not retrieve randomness.')
+				console.error(error);
+			});
 	}
 
-	if (skyid.seed != '') { // if user logged in
-		fetchNote()
-	}
-
-
-	var nextRow = 0
-	// fetch the note
-	function fetchNote() {
-		nextRow = 0
-		// fetch file
-		skyid.getFile('m', function(response, revision) {
-			console.log("response from getFile", revision, response);
-			var content = document.getElementById('content')
-			if (response == '') { // file not found
-				var entries = []
-			} else { // success
-				resp = JSON.parse(response)
-				var entries = resp.entries
-			}
-
-			let html = `
-				<table>
-					<tbody id="contentTable">
-						<tr>
-							<th>Domain/id</th>
-							<th>Skylink</th>
-							<th></th>
-							<th></th>
-						</tr>`
-		
-		
-			if (entries.length > 0) {
-				for (let i = 0; i < entries.length; i++) {
-					let registryUrl = skyid.getRegistryUrl(entries[i].domain)
-					let registryUrlLoc = new URL(registryUrl)
-					let urlParams = new URLSearchParams(registryUrlLoc.search)
-					let publickeyString = urlParams.get('publickey')
-					let datakeyHash = urlParams.get('datakey')
-					if (window.location.protocol == "file:") {
-						var url = 'https://siasky.net/skynet/registry?publickey=' + publickeyString + '&datakey=' + datakeyHash
-					} else {
-						var url = '/skynet/registry?publickey=' + publickeyString + '&datakey=' + datakeyHash
-					}
-					html += `<tr>
-						<td><input type="text" value="` + entries[i].domain + `" readonly class="disabled" id="domain` + nextRow + `"></td>
-						<td><input type="text" value="` + entries[i].skylink + `" class="biginput" id="skylink` + nextRow + `"></td>
-						<td><a href="` + url + `" target="_blank">Open</a></td>
-						<td><a style="margin-left: 20px;" href="#" onclick="javascript: copy('skyns://` + encodeURIComponent(publickeyString) + `/` + datakeyHash + `');">Copy HNS record</a></td>
-					</tr>`
-					nextRow += 1
-				}
-			}
-
-			html += `
-					</tbody>
-				</table>`
-			content.innerHTML = html
-
-			if (entries.length == 0) {
-				addEmptyRow()
-			}
-		})
-	}
-
-	function copy(text) {
-		let input = document.createElement('input');
-		input.setAttribute('value', text);
-		document.body.appendChild(input);
-		input.select();
-		let result = document.execCommand('copy');
-		document.body.removeChild(input);
-		return result;
-	}
-
-	function addEmptyRow() {
-		var contentTable = document.getElementById('contentTable')
-		let html = `<tr>
-			<td><input type="text" required id="domain` + nextRow + `"></td>
-			<td><input type="text" required class="biginput" id="skylink` + nextRow + `"></td>
-			<td></td>
-			<td></td>
-		</tr>`
-		nextRow += 1
-
-		contentTable.insertAdjacentHTML('beforeend', html);
-		
-	}
-
-	function saveNote() {
-		document.getElementById('save_note').innerHTML = 'Saving data...'
-
-		var entries = []
-		var i = 0
-		while (true) {
-			if (document.getElementById('domain' + i) != null) {
-				let domain = document.getElementById('domain' + i).value
-				let skylink = document.getElementById('skylink' + i).value
-				if (domain.length < 1) {
-					alert('Empty inputs can not be saved')
-					return
-				}
-				if (skylink.length != 46) {
-					alert('Skylink is invalid, please enter a 46 character length skylink without "sia://""')
-					return
-				}
-				entries.push( {'domain': domain, 'skylink': skylink} )
-				i += 1
-			} else {
-				break
-			}
-		}
-		var json = JSON.stringify({ 'entries': entries })
-
-		// upload to registry with SkyID key
-		skyid.setFile('m', json, function(response) {
-			document.getElementById('save_note').innerHTML = 'Index saved'
-			if (response != true) {
-				alert('Sorry, upload failed :(')
-			} else {
-				console.log('Account data saved')
-				setReg(0, entries)
-			}
-		})
-	}
-
-
-	function setReg(i, entries) {
-		console.log(entries)
-		skyid.setRegistry(entries[i].domain, entries[i].skylink, function (success) {
-			console.log(i)
-			if (success) {
-				i += 1
-				if (i < entries.length) {
-					document.getElementById('save_note').innerHTML = i + '/' + entries.length + ' saved'
-					setReg(i, entries)
-				} else {
-					document.getElementById('save_note').innerHTML = 'Save entries'
-					fetchNote()
-				}
-			} else {
-				console.log('failed to save domain: ', entries[i].domain)
-				alert('failed to save domain: ', entries[i].domain, '- is it a valid skylink?')
-			}
-		})
-
-	}
-
-	
 </script>
