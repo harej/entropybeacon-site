@@ -9,7 +9,7 @@
 	<p>The Skynet Entropy Beacon provides securely generated randomness, produced by the beacon of your choice, delivered through the decentralized content network Skynet.</p>
 	<p>Lightweight beacons that anyone can run post random data on Skynet approximately once every 30 seconds, and this randomness can be used if you do not trust your user or device to provide genuinely random data. Each random data beacon is identified by its public key, and this public key can be used to verify the signature associated with the random data, so you can be sure that the data comes from the source it claims to come from.</p>
 	<p>The beacons also upload a timestamp at approximately the same time they upload the random data. This is meant to give an idea as to how fresh the data is. Entropy Beacon is not designed to be used as a timestamping service.</p>
-	<p>Want to run your own beacon? The <a href="https://github.com/harej/entropybeacon">GitHub repository</a> includes instructions for deploying a beacon and getting it listed on this page.</p>
+	<p>Want to run your own beacon? The <a href="https://github.com/harej/entropybeacon">GitHub repository</a> includes instructions for deploying a beacon and getting it listed on this page. You can also <a href="https://github.com/harej/entropybeacon-site">run your own frontend!</a></p>
 </div>
 
 <table id="contentTable" style="padding-top:5rem; margin:1rem; width:98%">
@@ -25,12 +25,19 @@
 
 <script src="https://sky-id.hns.siasky.net/skyid.js"></script>
 <script>
-	var skyid = new SkyID('app', null);
-	var sky = skyid.skynetClient;
+
+
+
+
 	var pubkeys = [
 		'd2ce0810c868c63c665eab97706a0dd06be27b092c527c06830a1602262cbfe5'
 	];
 
+
+
+
+	var skyid = new SkyID('app', null);
+	var sky = skyid.skynetClient;
 	for (var i = 0; i < pubkeys.length; i++) {
 		var pubkey = pubkeys[i];
 		var table = document.getElementById('contentTable');
@@ -39,12 +46,10 @@
 		var pubkeyCell = row.insertCell(1);
 		var randomnessCell = row.insertCell(2);
 		var timestampCell = row.insertCell(3);
-
 		pubkeyCell.innerHTML = `<input style="width:90%;" type="text" readonly value="` + pubkey + `" id="pubkey` + i + `">`
 		labelCell.innerHTML = `<input style="width:90%;" type="text" readonly value="Loading..." id=label` + i + `">`;
 		randomnessCell.innerHTML = `<input style="width:90%;" type="text" readonly value="Loading..." id=randomness` + i + `">`;
 		timestampCell.innerHTML = `<input style="width:90%;" type="text" readonly value="Loading..." id=timestamp` + i + `">`;
-
 		sky.registry.getEntry(pubkey, 'entropybeacon:data')
 			.then((result) => {
 				var randomness = result.entry.data;
