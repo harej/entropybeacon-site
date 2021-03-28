@@ -8,7 +8,8 @@
 	<h2 class="green">Skynet Entropy Beacon</h2>
 	<p>The Skynet Entropy Beacon provides securely generated randomness, produced by the beacon of your choice, delivered through the decentralized content network Skynet.</p>
 	<p>Lightweight beacons that anyone can run post random data on Skynet approximately once every 30 seconds, and this randomness can be used if you do not trust your user or device to provide genuinely random data. Each random data beacon is identified by its public key, and this public key can be used to verify the signature associated with the random data, so you can be sure that the data comes from the source it claims to come from.</p>
-	<p>The beacons also upload a timestamp at approximately the same time they upload the random data. These timestamps should be treated as approximations, and the Entropy Beacon should not be considered a timestamping service.</p>
+	<p>The beacons also upload a timestamp at approximately the same time they upload the random data. This is meant to give an idea as to how fresh the data is. Entropy Beacon is not designed to be used as a timestamping service.</p>
+	<p>Want to run your own beacon? The <a href="https://github.com/harej/entropybeacon">GitHub repository</a> includes instructions for deploying a beacon and getting it listed on this page.</p>
 </div>
 
 <table id="contentTable" style="padding-top:5rem; margin:1rem; width:98%">
@@ -57,16 +58,13 @@
 								randomnessCell.innerHTML = `<input style="width:90%;" type="text" readonly value="` + randomness + `" id=randomness` + i + `">`;
 								timestampCell.innerHTML = `<input style="width:90%;" type="text" readonly value="` + timestamp + `" id=timestamp` + i + `">`;
 							}).catch((error3) => {
-								console.log('Could not retrieve label.')
 								console.error(error3);
 							})
 					}).catch((error2) => {
-						console.log('Could not retrieve time.')
 						console.error(error2);
 					})
 			})
 			.catch((error) => {
-				console.log('Could not retrieve randomness.')
 				console.error(error);
 			});
 	}
