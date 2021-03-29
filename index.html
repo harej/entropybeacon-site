@@ -26,51 +26,69 @@
 <script src="https://sky-id.hns.siasky.net/skyid.js"></script>
 <script>
 
-
-
-
 	var pubkeys = [
-		'd5f6890ac51c320f0fafd4965797d41be507b8f4d6940603e1d721cdfc84d99d'
+		'd5f6890ac51c320f0fafd4965797d41be507b8f4d6940603e1d721cdfc84d99d',
+		'1ce1a70cac2df5157f3af2934a4348c9080757bbd07c5e18589b6f201ef09aac'
 	];
-
-
-
 
 	var skyid = new SkyID('app', null);
 	var sky = skyid.skynetClient;
+	var table = document.getElementById('contentTable');
+
+	async function getData(pubkey, key) {
+		result = await sky.registry.getEntry(pubkey, 'entropybeacon:' + key);
+		return [result.entry.data, pubkey];
+	}
+
+	function createCell(id, value) {
+		var inputTag = document.createElement('input');
+		inputTag.setAttribute('style', 'width:90%');
+		inputTag.setAttribute('type', 'text');
+		inputTag.setAttribute('readonly', '');
+		inputTag.setAttribute('value', value);
+		inputTag.setAttribute('id', id);
+		return inputTag;
+	}
+
+	var labelTextboxes = [];
+	var pubkeyTextboxes = [];
+	var randomnessTextboxes = [];
+	var timestampTextboxes = [];
+
 	for (var i = 0; i < pubkeys.length; i++) {
 		var pubkey = pubkeys[i];
-		var table = document.getElementById('contentTable');
 		var row = table.insertRow(i+1);
 		var labelCell = row.insertCell(0);
 		var pubkeyCell = row.insertCell(1);
 		var randomnessCell = row.insertCell(2);
 		var timestampCell = row.insertCell(3);
-		pubkeyCell.innerHTML = `<input style="width:90%;" type="text" readonly value="` + pubkey + `" id="pubkey` + i + `">`
-		labelCell.innerHTML = `<input style="width:90%;" type="text" readonly value="Loading..." id=label` + i + `">`;
-		randomnessCell.innerHTML = `<input style="width:90%;" type="text" readonly value="Loading..." id=randomness` + i + `">`;
-		timestampCell.innerHTML = `<input style="width:90%;" type="text" readonly value="Loading..." id=timestamp` + i + `">`;
-		sky.registry.getEntry(pubkey, 'entropybeacon:data')
-			.then((result) => {
-				var randomness = result.entry.data;
-				sky.registry.getEntry(pubkey, 'entropybeacon:time')
-					.then((result2) => {
-						var timestamp = result2.entry.data;
-						sky.registry.getEntry(pubkey, 'entropybeacon:label')
-							.then((result3) => {
-								var label = result3.entry.data;
-								labelCell.innerHTML = `<input style="width:90%;" type="text" readonly value="` + label + `" id=label` + i + `">`;
-								randomnessCell.innerHTML = `<input style="width:90%;" type="text" readonly value="` + randomness + `" id=randomness` + i + `">`;
-								timestampCell.innerHTML = `<input style="width:90%;" type="text" readonly value="` + timestamp + `" id=timestamp` + i + `">`;
-							}).catch((error3) => {
-								console.error(error3);
-							})
-					}).catch((error2) => {
-						console.error(error2);
-					})
-			})
-			.catch((error) => {
-				console.error(error);
+
+		pubkeyTextboxes[pubkey] = createCell('pubkey-'+pubkey, pubkeys[i]);
+		pubkeyCell.append(pubkeyTextboxes[pubkey]);
+
+		labelTextboxes[pubkey] = createCell('label-'+pubkey, 'Loading...');
+		labelCell.append(labelTextboxes[pubkey]);
+
+		randomnessTextboxes[pubkey] = createCell('randomness-'+pubkey, 'Loading...');
+		randomnessCell.append(randomnessTextboxes[pubkey]);
+
+		timestampTextboxes[pubkey] = createCell('timestamp-'+pubkey, 'Loading...');
+		timestampCell.append(timestampTextboxes[pubkey]);
+	}
+
+	for (var i = 0; i < pubkeys.length; i++) {
+		var pubkey = pubkeys[i];
+		getData(pubkey, 'label')
+			.then((data) => {
+				labelTextboxes[data[1]].setAttribute('value', data[0])
+			});
+		getData(pubkey, 'data')
+			.then((data) => {
+				randomnessTextboxes[data[1]].setAttribute('value', data[0])
+			});
+		getData(pubkey, 'time')
+			.then((data) => {
+				timestampTextboxes[data[1]].setAttribute('value', data[0])
 			});
 	}
 
