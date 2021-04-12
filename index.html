@@ -30,7 +30,8 @@
 		'9459eef0e0992c193c162af7a8adc3c598e91554b93c75ebd274f73d5781a576',
 		'95af36ea6972c04c3ad6735fb014b80958b1e2ba4a68e2c1369b9a093cc801c4',
 		'1ff9cba485a67a308aa2fe9cd4b3734edda27198be9a05374d2d0f83dc16127f',
-		'1ce1a70cac2df5157f3af2934a4348c9080757bbd07c5e18589b6f201ef09aac'
+		'1ce1a70cac2df5157f3af2934a4348c9080757bbd07c5e18589b6f201ef09aac',
+		'1691387c5c61d7388d62354fdc6982252760bac278eae3d9bbec13a2e069ea86'
 	];
 
 	var skyid = new SkyID('app', null);
@@ -64,6 +65,7 @@
 		var pubkeyCell = row.insertCell(1);
 		var randomnessCell = row.insertCell(2);
 		var timestampCell = row.insertCell(3);
+		var viewJsonCell = row.insertCell(4);
 
 		pubkeyTextboxes[pubkey] = createCell('pubkey-'+pubkey, pubkeys[i]);
 		pubkeyCell.append(pubkeyTextboxes[pubkey]);
@@ -76,6 +78,11 @@
 
 		timestampTextboxes[pubkey] = createCell('timestamp-'+pubkey, 'Loading...');
 		timestampCell.append(timestampTextboxes[pubkey]);
+
+		var jsonUrl = sky.registry.getEntryUrl(pubkey, 'entropybeacon:data');
+		console.log(jsonUrl);
+		viewJsonCell.innerHTML = '<a href="'+jsonUrl+'">View JSON</a>';
+
 	}
 
 	for (var i = 0; i < pubkeys.length; i++) {
