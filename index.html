@@ -6,10 +6,7 @@
 
 <div style="margin:0 auto; max-width:1000px; padding-bottom:2em;">
 	<h2 class="green">Skynet Entropy Beacon</h2>
-	<p>The Skynet Entropy Beacon provides securely generated randomness, produced by the beacon of your choice, delivered through the decentralized content network Skynet.</p>
-	<p>Lightweight beacons that anyone can run post random data on Skynet approximately once every 30 seconds, and this randomness can be used if you do not trust your user or device to provide genuinely random data. Each random data beacon is identified by its public key, and this public key can be used to verify the signature associated with the random data, so you can be sure that the data comes from the source it claims to come from.</p>
-	<p>The beacons also upload a timestamp at approximately the same time they upload the random data. This is meant to give an idea as to how fresh the data is. Entropy Beacon is not designed to be used as a timestamping service.</p>
-	<p>Want to run your own beacon? The <a href="https://github.com/harej/entropybeacon">GitHub repository</a> includes instructions for deploying a beacon and getting it listed on this page. While the list on this page is curated in a centralized repository, you can also <a href="https://github.com/harej/entropybeacon-site">deploy your own beacon list</a>.</p>
+	<p>The Skynet Entropy Beacon provides securely generated randomness, produced by the beacon of your choice, delivered through the decentralized content network Skynet. <b><a href="https://github.com/harej/entropybeacon/blob/main/README.md" target="_blank">Learn more</a></b>.</p>
 </div>
 
 <table id="contentTable" style="padding-top:5rem; margin:1rem; width:98%">
@@ -40,7 +37,7 @@
 
 	async function getData(pubkey, key) {
 		result = await sky.registry.getEntry(pubkey, 'entropybeacon:' + key);
-		return [result.entry.data, pubkey];
+		return [pubkey, result.entry.data, result.entry.revision];
 	}
 
 	function createCell(id, value) {
@@ -81,7 +78,7 @@
 
 		var jsonUrl = sky.registry.getEntryUrl(pubkey, 'entropybeacon:data');
 		console.log(jsonUrl);
-		viewJsonCell.innerHTML = '<a href="'+jsonUrl+'">View JSON</a>';
+		viewJsonCell.innerHTML = '<a href="'+jsonUrl+'" target="_blank">View JSON</a>';
 
 	}
 
@@ -89,15 +86,13 @@
 		var pubkey = pubkeys[i];
 		getData(pubkey, 'label')
 			.then((data) => {
-				labelTextboxes[data[1]].setAttribute('value', data[0])
+				labelTextboxes[data[0]].setAttribute('value', data[1]);
 			});
 		getData(pubkey, 'data')
 			.then((data) => {
-				randomnessTextboxes[data[1]].setAttribute('value', data[0])
-			});
-		getData(pubkey, 'time')
-			.then((data) => {
-				timestampTextboxes[data[1]].setAttribute('value', data[0])
+				randomnessTextboxes[data[0]].setAttribute('value', data[1]);
+				var timestamp = new Date(data[2] * 1000);  // convert to milliseconds
+				timestampTextboxes[data[0]].setAttribute('value', timestamp.toLocaleString());
 			});
 	}
 
